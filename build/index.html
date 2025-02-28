@@ -31,6 +31,60 @@
         color: var(--text);
         overflow-x: hidden;
         min-height: 100vh;
+        padding-top: 40px; /* Add padding for the countdown bar */
+      }
+
+      /* Countdown bar styles */
+      .countdown-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        color: var(--text);
+        padding: 8px 0;
+        z-index: 1000;
+        border-bottom: 1px solid var(--accent);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .countdown-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 1rem;
+      }
+
+      .countdown-event {
+        margin-right: 15px;
+        font-weight: bold;
+        color: var(--secondary);
+      }
+
+      .countdown-timer {
+        display: flex;
+        gap: 10px;
+      }
+
+      .countdown-unit {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 50px;
+      }
+
+      .countdown-number {
+        font-size: 1.1rem;
+        font-weight: bold;
+      }
+
+      .countdown-label {
+        font-size: 0.7rem;
+        opacity: 0.8;
+        text-transform: uppercase;
       }
 
       .bokeh {
@@ -303,8 +357,77 @@
     <div id="root"></div>
 
     <script type="text/babel">
+      // CountdownBar component
+      const CountdownBar = ({ targetDate, eventName }) => {
+        const [timeLeft, setTimeLeft] = React.useState({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0,
+        });
+
+        React.useEffect(() => {
+          const calculateTimeLeft = () => {
+            const difference = new Date(targetDate) - new Date();
+
+            if (difference > 0) {
+              const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+              const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+              const minutes = Math.floor((difference / 1000 / 60) % 60);
+              const seconds = Math.floor((difference / 1000) % 60);
+
+              setTimeLeft({ days, hours, minutes, seconds });
+            } else {
+              setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            }
+          };
+
+          calculateTimeLeft();
+          const timer = setInterval(calculateTimeLeft, 1000);
+
+          return () => clearInterval(timer);
+        }, [targetDate]);
+
+        return (
+          <div className="countdown-bar">
+            <div className="countdown-content">
+              <div className="countdown-event">{eventName}:</div>
+              <div className="countdown-timer">
+                <div className="countdown-unit">
+                  <span className="countdown-number">{timeLeft.days}</span>
+                  <span className="countdown-label">Dagar</span>
+                </div>
+                <div className="countdown-unit">
+                  <span className="countdown-number">
+                    {timeLeft.hours.toString().padStart(2, "0")}
+                  </span>
+                  <span className="countdown-label">Timmar</span>
+                </div>
+                <div className="countdown-unit">
+                  <span className="countdown-number">
+                    {timeLeft.minutes.toString().padStart(2, "0")}
+                  </span>
+                  <span className="countdown-label">Minuter</span>
+                </div>
+                <div className="countdown-unit">
+                  <span className="countdown-number">
+                    {timeLeft.seconds.toString().padStart(2, "0")}
+                  </span>
+                  <span className="countdown-label">Sekunder</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
       const App = () => {
         const [activeSection, setActiveSection] = React.useState("home");
+        // You can change this target date to whatever date you want to count down to
+        const [targetDate, setTargetDate] = React.useState(
+          "2025-02-29T21:00:00"
+        );
+        const [eventName, setEventName] = React.useState("Server Launch");
 
         React.useEffect(() => {
           // Generate bokeh elements
@@ -349,10 +472,10 @@
 
             // Create a gear SVG
             gear.innerHTML = `
-            <svg viewBox="0 0 100 100" fill="white">
-              <path d="M50,20 L55,20 L60,10 L40,10 L45,20 Z M80,45 L80,55 L90,60 L90,40 L80,45 Z M55,80 L45,80 L40,90 L60,90 L55,80 Z M20,55 L20,45 L10,40 L10,60 L20,55 Z M25,27 L33,33 L45,25 L35,15 L25,27 Z M73,27 L65,33 L55,25 L65,15 L73,27 Z M73,73 L65,67 L55,75 L65,85 L73,73 Z M27,73 L35,67 L45,75 L35,85 L27,73 Z M50,30 A20,20 0 1,0 50,70 A20,20 0 1,0 50,30 Z M50,40 A10,10 0 1,1 50,60 A10,10 0 1,1 50,40 Z" />
-            </svg>
-          `;
+                  <svg viewBox="0 0 100 100" fill="white">
+                    <path d="M50,20 L55,20 L60,10 L40,10 L45,20 Z M80,45 L80,55 L90,60 L90,40 L80,45 Z M55,80 L45,80 L40,90 L60,90 L55,80 Z M20,55 L20,45 L10,40 L10,60 L20,55 Z M25,27 L33,33 L45,25 L35,15 L25,27 Z M73,27 L65,33 L55,25 L65,15 L73,27 Z M73,73 L65,67 L55,75 L65,85 L73,73 Z M27,73 L35,67 L45,75 L35,85 L27,73 Z M50,30 A20,20 0 1,0 50,70 A20,20 0 1,0 50,30 Z M50,40 A10,10 0 1,1 50,60 A10,10 0 1,1 50,40 Z" />
+                  </svg>
+                `;
 
             document.body.appendChild(gear);
           }
@@ -388,54 +511,57 @@
         };
 
         return (
-          <div className="container">
-            <header>
-              <h1
-                style={{
-                  textAlign: "center",
-                  margin: "2rem 0",
-                  fontSize: "2.5rem",
-                  textShadow: "0 0 10px rgba(0, 188, 212, 0.7)",
-                }}
-              >
-                Olofs SMP
-              </h1>
-              <nav>
-                <ul className="nav-list">
-                  <li>
-                    <button onClick={() => setActiveSection("home")}>
-                      Home
-                    </button>
-                  </li>
-                  <li>
-                    <button onClick={() => setActiveSection("about")}>
-                      About
-                    </button>
-                  </li>
-                  <li>
-                    <button onClick={() => setActiveSection("features")}>
-                      Features
-                    </button>
-                  </li>
-                  <li>
-                    <button onClick={() => setActiveSection("connect")}>
-                      Connect
-                    </button>
-                  </li>
-                </ul>
-              </nav>
-            </header>
+          <>
+            <CountdownBar targetDate={targetDate} eventName={eventName} />
+            <div className="container">
+              <header>
+                <h1
+                  style={{
+                    textAlign: "center",
+                    margin: "2rem 0",
+                    fontSize: "2.5rem",
+                    textShadow: "0 0 10px rgba(0, 188, 212, 0.7)",
+                  }}
+                >
+                  Olofs SMP
+                </h1>
+                <nav>
+                  <ul className="nav-list">
+                    <li>
+                      <button onClick={() => setActiveSection("home")}>
+                        Hem
+                      </button>
+                    </li>
+                    <li>
+                      <button onClick={() => setActiveSection("about")}>
+                        Om
+                      </button>
+                    </li>
+                    <li>
+                      <button onClick={() => setActiveSection("features")}>
+                        Mods
+                      </button>
+                    </li>
+                    <li>
+                      <button onClick={() => setActiveSection("connect")}>
+                        Anslut
+                      </button>
+                    </li>
+                  </ul>
+                </nav>
+              </header>
 
-            <main>{renderSection()}</main>
+              <main>{renderSection()}</main>
 
-            <footer className="footer">
-              <p>&copy; 2025 Olofs SMP Minecraft Server</p>
-              <p style={{ marginTop: "0.5rem", fontSize: "0.8rem" }}>
-                Minecraft is a trademark of Mojang Studios. This server is not
-                affiliated with Mojang.
-              </p>
-            </footer>
-          </div>
+              <footer className="footer">
+                <p>&copy; 2025 Olofs SMP Minecraft Server</p>
+                <p style={{ marginTop: "0.5rem", fontSize: "0.8rem" }}>
+                  Minecraft is a trademark of Mojang Studios. This server is not
+                  affiliated with Mojang.
+                </p>
+              </footer>
+            </div>
+          </>
         );
       };
 
@@ -448,12 +574,13 @@
             >
               <div className="hero-content" style={{ margin: "0 auto" }}>
                 <h2 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
-                  Welcome to Olofs SMP!
+                  Välkommen till Olofs SMP!
                 </h2>
                 <p style={{ marginBottom: "2rem", lineHeight: "1.6" }}>
-                  Experience Minecraft like never before with our custom modpack
-                  focused around the Create mod. Build amazing contraptions,
-                  automate your world, and join our friendly community!
+                  Det är dags för 2 veckors minecraft fas men med lite
+                  engineering spice. Lagom vanilla fast inte vanilla med lagom
+                  mycket nytt skit att lära sig. Lite svårare än ren vanilla
+                  också med en sjuk värld som är skalenelig med verkligheten.
                 </p>
               </div>
             </div>
@@ -461,24 +588,23 @@
             {/* Stats section - centered on the page */}
             <div className="stats" style={{ textAlign: "center" }}>
               <div className="stat-item">
-                <h3>30+</h3>
-                <p>Carefully Selected Mods</p>
+                <h3>39</h3>
+                <p>Mods</p>
               </div>
               <div className="stat-item">
                 <h3>24/7</h3>
-                <p>Server Uptime</p>
+                <p>Spela när fan du vill</p>
               </div>
               <div className="stat-item">
                 <h3>10+</h3>
-                <p>Active Players</p>
+                <p>Låt oss göra det till fler</p>
               </div>
             </div>
 
             <div className="card">
               <h3 style={{ marginBottom: "1rem" }}>Latest News</h3>
               <p style={{ marginBottom: "0.5rem" }}>
-                <strong>Feb 25, 2025</strong> - Darkness mod added. Don't get
-                lost!
+                <strong>Feb 29, 2025</strong> - START efter clash
               </p>
               <p>
                 <strong>Feb 15, 2025</strong> - Server announced
@@ -492,26 +618,24 @@
         return (
           <div className="card" style={{ marginTop: "2rem" }}>
             <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-              About Our Server
+              Om survern
             </h2>
             <p style={{ marginBottom: "1rem", lineHeight: "1.6" }}>
-              Olofs SMP is a community-focused Minecraft server built around the
-              Create mod and its amazing mechanical possibilities. Our server
-              provides a unique experience where players can collaborate, build
-              incredible contraptions, and explore a world enhanced by carefully
-              selected mods.
+              Olofs SMP är den gyllene standarden av 2-veckors-minecraft-fasen.
+              Här kan alla spela tillsammans, på olika ställen eller runt spawn.
+              Man måste hjälpas åt för att lyckas. Speciellt eftersom det är så
+              mörkt så kan det vara värt att tillsammans bygga moderna städer
+              med elbelysning för att tillsammans thrivea.
             </p>
             <p style={{ marginBottom: "1rem", lineHeight: "1.6" }}>
-              Founded in 2024, our server has grown from a small group of
-              friends to a thriving community of engineers, builders, and
-              adventurers. We pride ourselves on maintaining a friendly,
-              drama-free environment where creativity thrives.
+              2025 är vårat år. Vi har även många stora Youtubers som t.ex. Olof
+              som spelar in en serie på servern.
             </p>
             <p style={{ lineHeight: "1.6" }}>
-              Our modpack is optimized for performance while offering an
-              engaging gameplay experience. The server is maintained by a
-              dedicated team of admins who are passionate about providing the
-              best possible environment for our players.
+              Det finns inbyggd voice chat som gör att man kan höra folk man är
+              i närheten av om man vill. På detta sätt kan man sluta nya
+              kraftftulla connections som en dag kanske t.om. kan bli en
+              linkedin kontakt.
             </p>
           </div>
         );
@@ -527,11 +651,12 @@
             <div className="feature-grid">
               <div className="card">
                 <h3 style={{ marginBottom: "0.5rem", color: "var(--accent)" }}>
-                  Create-Centered
+                  Create
                 </h3>
                 <p>
-                  Our modpack features the Create mod at its core, allowing for
-                  incredible mechanical contraptions and automation.
+                  Vi har ingenjörsmoddet Create, det innehåller massa kugghjul,
+                  el, och sånna saker som man kan använda för att bygga stora
+                  automatiserade fabriker.
                 </p>
               </div>
               <div className="card">
@@ -539,17 +664,18 @@
                   Custom World
                 </h3>
                 <p>
-                  Explore our hand-crafted world with unique biomes, structures,
-                  and resources.
+                  Vi har värsta världen som är genererad i samma storlek som
+                  verkligheten. Det betyder sjukt stora bergskedjor med stora
+                  öppna slätter så långt ögat når.
                 </p>
               </div>
               <div className="card">
                 <h3 style={{ marginBottom: "0.5rem", color: "var(--accent)" }}>
-                  Good difficulty
+                  Cheating = Omöjligt
                 </h3>
                 <p>
-                  Darkenss makes the game harder and torches now extinguish
-                  after some time.
+                  Ingen är OP och ingen kan skicka kommandon till servern vilket
+                  gör grinden värd.
                 </p>
               </div>
             </div>
@@ -600,7 +726,7 @@
         return (
           <div className="card" style={{ marginTop: "2rem" }}>
             <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>
-              Join Our Server
+              Joina IDAG!
             </h2>
 
             {/* New clickable server address container */}
@@ -633,12 +759,12 @@
                 </div>
                 <div className="server-address">play.radicalheights.se</div>
               </div>
-              <div className="copy-notification">Copied!</div>
+              <div className="copy-notification">Kopierad!</div>
             </div>
 
             <div style={{ marginBottom: "1.5rem" }}>
               <h3 style={{ marginBottom: "1rem", textAlign: "center" }}>
-                How to Join
+                Hur man joinar
               </h3>
               <ol
                 style={{
@@ -648,10 +774,9 @@
                   margin: "0 auto",
                 }}
               >
-                <li>Install Minecraft Java Edition</li>
-                <li>Download our modpack from the button below</li>
+                <li>Ladda ner MC (OPTIONAL)</li>
                 <li>
-                  Import the modpack into{" "}
+                  Ladda ner{" "}
                   <a
                     href="https://modrinth.com/app"
                     target="_blank"
@@ -660,14 +785,16 @@
                     Modrinth
                   </a>
                 </li>
-                <li>Connect to our server address</li>
+                <li>Ladda ner modpack-filen med knappen nedan</li>
+                <li>Öppna den nedladdade filen (den ska öppnad i Modrinth)</li>
+                <li>Kopiera IPn och joina</li>
               </ol>
               <div style={{ textAlign: "center", marginTop: "1.5rem" }}>
                 <a href="https://cdn.discordapp.com/attachments/667021402968424460/1344706929661841489/Olofs_SMP_1.0.0.mrpack?ex=67c1e36b&is=67c091eb&hm=e6337e2404fe90e66322425a9d3a99c9dd7680d862a0c787f6be07efd134bbbc&">
                   <button
                     style={{ fontSize: "1.1rem", padding: "0.75rem 2rem" }}
                   >
-                    Download Modpack
+                    Ladda ner Modpack
                   </button>
                 </a>
               </div>
@@ -675,7 +802,7 @@
 
             <div>
               <h3 style={{ marginBottom: "1rem", textAlign: "center" }}>
-                Community Links
+                Community Links (inge funkar)
               </h3>
               <div className="community-buttons">
                 <button
